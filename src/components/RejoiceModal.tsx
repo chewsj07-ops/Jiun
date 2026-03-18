@@ -22,25 +22,16 @@ export const RejoiceModal: React.FC<RejoiceModalProps> = ({ shareId, onClose, on
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // First check community_posts
-        let docRef = doc(db, 'community_posts', shareId);
-        let docSnap = await getDoc(docRef);
-        let isCommunity = true;
-        
-        if (!docSnap.exists()) {
-          // Fallback to shared_merits
-          docRef = doc(db, 'shared_merits', shareId);
-          docSnap = await getDoc(docRef);
-          isCommunity = false;
-        }
+        const docRef = doc(db, 'shared_merits', shareId);
+        const docSnap = await getDoc(docRef);
         
         if (docSnap.exists()) {
           const data = docSnap.data();
           setData({ 
             id: docSnap.id, 
-            isCommunity,
+            isCommunity: !!data.isCommunity, // If we want to flag it
             ...data,
-            rejoiceCount: isCommunity ? (data.likes || 0) : (data.rejoiceCount || 0)
+            rejoiceCount: data.rejoiceCount || 0
           });
         } else {
           setError('该功德记录不存在或已被删除。');
@@ -59,23 +50,10 @@ export const RejoiceModal: React.FC<RejoiceModalProps> = ({ shareId, onClose, on
     if (rejoicing || rejoiced || !data) return;
     setRejoicing(true);
     try {
-      if (data.isCommunity) {
-        const docRef = doc(db, 'community_posts', shareId);
-        await updateDoc(docRef, {
-          likes: increment(1)
-        });
-        // Also update shared_merits if it exists there
-        const sharedRef = doc(db, 'shared_merits', shareId);
-        const sharedSnap = await getDoc(sharedRef);
-        if (sharedSnap.exists()) {
-          await updateDoc(sharedRef, { rejoiceCount: increment(1) });
-        }
-      } else {
-        const docRef = doc(db, 'shared_merits', shareId);
-        await updateDoc(docRef, {
-          rejoiceCount: increment(1)
-        });
-      }
+      const docRef = doc(db, 'shared_merits', shareId);
+      await updateDoc(docRef, {
+        rejoiceCount: increment(1)
+      });
       
       setData((prev: any) => ({ ...prev, rejoiceCount: (prev.rejoiceCount || 0) + 1 }));
       setRejoiced(true);

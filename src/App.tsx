@@ -266,8 +266,8 @@ export default function App() {
       let shareUrl = 'https://jiun-qg8i.vercel.app';
       
       if (fbUser) {
-        // If it's already a community post with an id, we could use it, but let's create a shared_merits doc for consistency or use the existing id if it's a community post
-        const shareId = meritData.id && meritData.userName ? meritData.id : Date.now().toString() + Math.random().toString(36).substring(2, 9);
+        // Always generate a new shareId to avoid permission collisions
+        const shareId = Date.now().toString() + Math.random().toString(36).substring(2, 9);
         
         if (!meritData.id || !meritData.userName) {
           const shareDoc = {
@@ -285,13 +285,14 @@ export default function App() {
           // It's a community post, let's also ensure it exists in shared_merits for the RejoiceModal, or RejoiceModal can fetch from community_posts.
           // Actually, let's just save it to shared_merits to be safe, so RejoiceModal always works.
           const shareDoc = {
-            userId: meritData.userId || fbUser.uid,
+            userId: fbUser.uid, // Always use current user's ID to pass security rules
             userName: meritData.userName || userProfile.name || '同修',
             type: meritData.type || '修行',
             title: `${meritData.chant || meritData.type} ${meritData.count ? meritData.count + '次' : ''}`,
             description: meritData.dedication || meritData.vow || '',
             rejoiceCount: meritData.likes || 0,
-            timestamp: meritData.timestamp || Date.now()
+            timestamp: meritData.timestamp || Date.now(),
+            isCommunity: true
           };
           await setDoc(doc(db, 'shared_merits', shareId), shareDoc, { merge: true });
         }
