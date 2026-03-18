@@ -1,0 +1,168 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId}
+    // Fields:
+    //   - name: string
+    //   - avatar: string
+    //   - personalVow: string
+    //   - theme: string
+    //   - woodenFishAppearance: string
+    //   - soundType: string
+    //   - language: string
+    //   - createdAt: string (date-time)
+    //   - updatedAt: string (date-time)
+    //
+    // Collection: users/{userId}/thoughts
+    // Document ID: {thoughtId}
+    // Fields:
+    //   - timestamp: number
+    //   - emotions: list of strings
+    //   - content_encrypted: string
+    //   - iv: string
+    //   - isEncrypted: boolean
+    //   - guidance: string
+    //
+    // Collection: users/{userId}/deeds
+    // Document ID: {deedId}
+    // Fields:
+    //   - timestamp: number
+    //   - date: string
+    //   - type: string
+    //   - content: string
+    //   - category: string
+    //   - merit: number
+    //   - guidance: string
+    //   - result: map
+    //
+    // Collection: users/{userId}/history
+    // Document ID: {historyId}
+    // Fields:
+    //   - id: string
+    //   - type: string
+    //   - chant: string
+    //   - count: number
+    //   - dedication: string
+    //   - vow: string
+    //   - endTime: number
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isValidUserProfile() {
+      let data = request.resource.data;
+      return (!('name' in data) || (data.name is string && data.name.size() <= 100)) &&
+             (!('avatar' in data) || (data.avatar is string && data.avatar.size() <= 1000)) &&
+             (!('personalVow' in data) || (data.personalVow is string && data.personalVow.size() <= 500)) &&
+             (!('theme' in data) || (data.theme is string && data.theme.size() <= 50)) &&
+             (!('woodenFishAppearance' in data) || (data.woodenFishAppearance is string && data.woodenFishAppearance.size() <= 50)) &&
+             (!('soundType' in data) || (data.soundType is string && data.soundType.size() <= 50)) &&
+             (!('language' in data) || (data.language is string && data.language.size() <= 50)) &&
+             (!('createdAt' in data) || data.createdAt is string) &&
+             (!('updatedAt' in data) || data.updatedAt is string);
+    }
+    
+    function isValidThought() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['timestamp']) &&
+             (data.timestamp is number || data.timestamp is string) &&
+             (!('emotions' in data) || (data.emotions is list && data.emotions.size() <= 20)) &&
+             (!('content_encrypted' in data) || (data.content_encrypted is string && data.content_encrypted.size() <= 10000)) &&
+             (!('iv' in data) || (data.iv is string && data.iv.size() <= 100)) &&
+             (!('isEncrypted' in data) || data.isEncrypted is bool) &&
+             (!('guidance' in data) || (data.guidance is string && data.guidance.size() <= 5000));
+    }
+    
+    function isValidDeed() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['type']) &&
+             data.type is string && data.type.size() <= 50 &&
+             (!('timestamp' in data) || data.timestamp is number || data.timestamp is string) &&
+             (!('date' in data) || (data.date is string && data.date.size() <= 50)) &&
+             (!('content' in data) || (data.content is string && data.content.size() <= 5000)) &&
+             (!('category' in data) || (data.category is string && data.category.size() <= 100)) &&
+             (!('merit' in data) || data.merit is number) &&
+             (!('guidance' in data) || (data.guidance is string && data.guidance.size() <= 5000)) &&
+             (!('result' in data) || data.result is map);
+    }
+    
+    function isValidZenHistory() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['id', 'type', 'endTime']) &&
+             (data.id is string || data.id is number) &&
+             data.type is string && data.type.size() <= 50 &&
+             data.endTime is number &&
+             (!('chant' in data) || (data.chant is string && data.chant.size() <= 200)) &&
+             (!('count' in data) || data.count is number) &&
+             (!('dedication' in data) || (data.dedication is string && data.dedication.size() <= 1000)) &&
+             (!('vow' in data) || (data.vow is string && data.vow.size() <= 1000)) &&
+             (!('startTime' in data) || data.startTime is number || data.startTime == null) &&
+             (!('duration' in data) || data.duration is number) &&
+             (!('source' in data) || (data.source is string && data.source.size() <= 50));
+    }
+
+    function isValidVow() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['id', 'content', 'isDefault']) &&
+             data.id is string && data.id.size() <= 100 &&
+             data.content is string && data.content.size() <= 1000 &&
+             data.isDefault is bool;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUserProfile();
+      allow update: if isOwner(userId) && isValidUserProfile();
+      allow delete: if isOwner(userId);
+
+      match /thoughts/{thoughtId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidThought();
+        allow update: if isOwner(userId) && isValidThought();
+        allow delete: if isOwner(userId);
+      }
+
+      match /goodDeeds/{deedId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidDeed();
+        allow update: if isOwner(userId) && isValidDeed();
+        allow delete: if isOwner(userId);
+      }
+
+      match /history/{historyId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidZenHistory();
+        allow update: if isOwner(userId) && isValidZenHistory();
+        allow delete: if isOwner(userId);
+      }
+
+      match /vows/{vowId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidVow();
+        allow update: if isOwner(userId) && isValidVow();
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user settings, preferences, and total merit.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "User's display name" },
+        "avatar": { "type": "string", "description": "User's avatar URL" },
+        "personalVow": { "type": "string", "description": "User's personal vow" },
+        "theme": { "type": "string" },
+        "woodenFishAppearance": { "type": "string" },
+        "soundType": { "type": "string" },
+        "language": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Thought": {
+      "title": "Thought",
+      "description": "A thought record",
+      "type": "object",
+      "properties": {
+        "timestamp": { "type": "number" },
+        "emotions": { "type": "array", "items": { "type": "string" } },
+        "content_encrypted": { "type": "string" },
+        "iv": { "type": "string" },
+        "isEncrypted": { "type": "boolean" },
+        "guidance": { "type": "string" }
+      },
+      "required": ["timestamp"]
+    },
+    "Deed": {
+      "title": "Deed",
+      "description": "A good deed or repentance record",
+      "type": "object",
+      "properties": {
+        "timestamp": { "type": "number" },
+        "date": { "type": "string" },
+        "type": { "type": "string" },
+        "content": { "type": "string" },
+        "category": { "type": "string" },
+        "merit": { "type": "number" },
+        "guidance": { "type": "string" },
+        "result": { "type": "object" }
+      },
+      "required": ["type"]
+    },
+    "ZenHistory": {
+      "title": "ZenHistory",
+      "description": "Meditation or chanting history",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string" },
+        "chant": { "type": "string" },
+        "count": { "type": "number" },
+        "dedication": { "type": "string" },
+        "vow": { "type": "string" },
+        "endTime": { "type": "number" }
+      },
+      "required": ["id", "type", "endTime"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User profile and settings."
+    },
+    "/users/{userId}/thoughts/{thoughtId}": {
+      "schema": { "$ref": "#/entities/Thought" },
+      "description": "User's thought records."
+    },
+    "/users/{userId}/deeds/{deedId}": {
+      "schema": { "$ref": "#/entities/Deed" },
+      "description": "User's good deed history records."
+    },
+    "/users/{userId}/history/{historyId}": {
+      "schema": { "$ref": "#/entities/ZenHistory" },
+      "description": "User's zen history records."
+    }
+  }
+}
