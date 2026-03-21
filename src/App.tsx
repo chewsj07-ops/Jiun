@@ -261,50 +261,49 @@ export default function App() {
 
   const { user: fbUser } = useFirebase();
 
-  const shareMerit = async (meritData: any) => {
+  const shareMerit = async (meritData: any, isCommunity: boolean = false) => {
     if (isSharing) return;
     setIsSharing(true);
     try {
       let shareUrl = window.location.origin;
       
-      // Always generate a new shareId to avoid permission collisions
-      const shareId = Date.now().toString() + Math.random().toString(36).substring(2, 9);
+      // If sharing an existing community post, reuse its ID so rejoices go to the original post
+      const isExistingCommunityPost = !!meritData.userName && meritData.likes !== undefined;
+      const shareId = isExistingCommunityPost 
+        ? meritData.id 
+        : Date.now().toString() + Math.random().toString(36).substring(2, 9);
+        
       const currentUserId = fbUser ? fbUser.uid : identityService.getUserId();
       
       const url = new URL(window.location.origin);
       url.searchParams.set('rejoice', shareId);
       shareUrl = url.toString();
 
-      const shareText = `我刚刚完成了 ${meritData.count ? meritData.count + ' 次 ' : ''}${meritData.chant || meritData.type}。愿以此功德，普及于一切。邀请您一同随喜赞叹！\n\n${shareUrl}`;
+      let shareMessage = `我刚刚完成了 ${meritData.count ? meritData.count + ' 次 ' : ''}${meritData.chant || meritData.type}。愿以此功德，普及于一切。邀请您一同随喜赞叹！`;
+      if (isExistingCommunityPost && !meritData.isUserPost) {
+        shareMessage = `邀请您一同随喜赞叹 ${meritData.userName} 完成的 ${meritData.count ? meritData.count + ' 次 ' : ''}${meritData.chant || meritData.type}！`;
+      }
+      const fullShareText = `${shareMessage}\n\n${shareUrl}`;
 
       // 1. Save to Firestore FIRST
       // This is critical for iOS Safari. If we call navigator.share first, Safari might suspend
       // the page and the network request for setDoc will be paused until the user returns to Safari.
       // If the friend clicks the link before the user returns to Safari, the document won't exist.
       try {
-        if (!meritData.id || !meritData.userName) {
+        if (!isExistingCommunityPost) {
           const shareDoc = {
             userId: currentUserId,
             userName: userProfile.name || '同修',
             type: meritData.type || '修行',
             title: `${meritData.chant || meritData.type || '修行'} ${meritData.count ? meritData.count + '次' : ''}`.trim(),
             description: meritData.dedication || meritData.vow || meritData.content || '',
-            rejoiceCount: 0,
-            timestamp: Date.now()
+            rejoiceCount: meritData.likes || 0,
+            timestamp: meritData.timestamp || meritData.endTime || Date.now(),
+            isCommunity: isCommunity,
+            chant: meritData.chant || meritData.type || '修行',
+            count: meritData.count || 0
           };
           
-          await setDoc(doc(db, 'shared_merits', shareId), shareDoc);
-        } else {
-          const shareDoc = {
-            userId: currentUserId,
-            userName: meritData.userName || userProfile.name || '同修',
-            type: meritData.type || '修行',
-            title: `${meritData.chant || meritData.type || '修行'} ${meritData.count ? meritData.count + '次' : ''}`.trim(),
-            description: meritData.dedication || meritData.vow || meritData.content || '',
-            rejoiceCount: meritData.likes || 0,
-            timestamp: meritData.timestamp || Date.now(),
-            isCommunity: true
-          };
           await setDoc(doc(db, 'shared_merits', shareId), shareDoc, { merge: true });
         }
       } catch (err: any) {
@@ -318,7 +317,7 @@ export default function App() {
         if (navigator.share) {
           await navigator.share({
             title: '随喜赞叹',
-            text: shareText,
+            text: shareMessage,
             url: shareUrl
           });
         } else {
@@ -326,16 +325,16 @@ export default function App() {
           const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
           if (confirm('当前浏览器不支持原生分享。是否直接分享到 WhatsApp？\n(点击取消将复制链接到剪贴板)')) {
             const waUrl = isMobile 
-              ? `whatsapp://send?text=${encodeURIComponent(shareText)}`
-              : `https://web.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+              ? `whatsapp://send?text=${encodeURIComponent(fullShareText)}`
+              : `https://web.whatsapp.com/send?text=${encodeURIComponent(fullShareText)}`;
             window.open(waUrl, '_blank');
           } else {
             if (navigator.clipboard && navigator.clipboard.writeText) {
-              await navigator.clipboard.writeText(shareText);
+              await navigator.clipboard.writeText(fullShareText);
               alert('链接已复制到剪贴板，快去分享给好友吧！');
             } else {
               const textArea = document.createElement("textarea");
-              textArea.value = shareText;
+              textArea.value = fullShareText;
               document.body.appendChild(textArea);
               textArea.focus();
               textArea.select();
@@ -356,17 +355,17 @@ export default function App() {
           if (confirm('分享被拦截或失败。是否尝试直接分享到 WhatsApp？\n(点击取消将复制链接到剪贴板)')) {
             const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
             const waUrl = isMobile 
-              ? `whatsapp://send?text=${encodeURIComponent(shareText)}`
-              : `https://web.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+              ? `whatsapp://send?text=${encodeURIComponent(fullShareText)}`
+              : `https://web.whatsapp.com/send?text=${encodeURIComponent(fullShareText)}`;
             window.open(waUrl, '_blank');
           } else {
             try {
               if (navigator.clipboard && navigator.clipboard.writeText) {
-                await navigator.clipboard.writeText(shareText);
+                await navigator.clipboard.writeText(fullShareText);
                 alert('链接已复制到剪贴板，快去分享给好友吧！');
               } else {
                 const textArea = document.createElement("textarea");
-                textArea.value = shareText;
+                textArea.value = fullShareText;
                 document.body.appendChild(textArea);
                 textArea.focus();
                 textArea.select();
@@ -1188,10 +1187,41 @@ export default function App() {
                       诵经圆满
                     </button>
                     <button
-                      onClick={() => shareMerit(lastSession)}
+                      onClick={async () => {
+                        // Optimistic update for community feed
+                        if (shareToCommunity) {
+                          const newPost: CommunityPost = {
+                            id: Date.now().toString(),
+                            userName: userProfile.name || "静心居士",
+                            chant: lastSession.chant,
+                            count: lastSession.count,
+                            dedication: lastSession.dedication || dedications.find(d => d.isDefault)?.content || dedications[0]?.content || "",
+                            likes: 0,
+                            timestamp: Date.now(),
+                            isUserPost: true
+                          };
+                          setCommunityPosts(prev => [newPost, ...prev]);
+                        }
+                        
+                        // Mark session as complete
+                        practiceService.updateActivity('full_dedication', true);
+                        practiceService.logMerit('full_dedication');
+                        
+                        // Trigger share (this saves to Firestore and opens share sheet)
+                        await shareMerit(lastSession, shareToCommunity);
+                        
+                        // Close modal
+                        setShowSummary(false);
+                        setSessionFlowStep('none');
+                      }}
                       disabled={isSharing}
-                      className="w-14 flex items-center justify-center bg-zen-bg text-zen-accent rounded-2xl font-bold hover:bg-zen-accent/10 transition-colors border border-zen-accent/20 disabled:opacity-50"
+                      className="w-14 flex relative items-center justify-center bg-zen-bg text-zen-accent rounded-2xl font-bold hover:bg-zen-accent/10 transition-colors border border-zen-accent/20 disabled:opacity-50"
                     >
+                      {isSharing && (
+                        <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-black/80 text-white px-3 py-1.5 rounded-lg text-xs whitespace-nowrap animate-fade-in">
+                          诵经圆满，准备分享...
+                        </div>
+                      )}
                       <Share2 className="w-5 h-5" />
                     </button>
                   </div>
