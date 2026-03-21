@@ -321,28 +321,15 @@ export default function App() {
             text: shareText,
             url: shareUrl
           });
-        } else if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(shareText);
-          alert('链接已复制到剪贴板，快去分享给好友吧！');
         } else {
-          const textArea = document.createElement("textarea");
-          textArea.value = shareText;
-          document.body.appendChild(textArea);
-          textArea.focus();
-          textArea.select();
-          try {
-            document.execCommand('copy');
-            alert('链接已复制到剪贴板，快去分享给好友吧！');
-          } catch (err) {
-            alert('复制失败，请手动复制链接:\n\n' + shareUrl);
-          }
-          document.body.removeChild(textArea);
-        }
-      } catch (err: any) {
-        if (err.name !== 'AbortError') {
-          console.error('Share failed:', err);
-          // Fallback to clipboard if share fails for other reasons (like being blocked by Safari due to async delay)
-          try {
+          // Fallback for desktop or unsupported browsers
+          const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+          if (confirm('当前浏览器不支持原生分享。是否直接分享到 WhatsApp？\n(点击取消将复制链接到剪贴板)')) {
+            const waUrl = isMobile 
+              ? `whatsapp://send?text=${encodeURIComponent(shareText)}`
+              : `https://web.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+            window.open(waUrl, '_blank');
+          } else {
             if (navigator.clipboard && navigator.clipboard.writeText) {
               await navigator.clipboard.writeText(shareText);
               alert('链接已复制到剪贴板，快去分享给好友吧！');
@@ -360,9 +347,41 @@ export default function App() {
               }
               document.body.removeChild(textArea);
             }
-          } catch (clipboardErr) {
-            console.error('Clipboard fallback failed:', clipboardErr);
-            alert('复制失败，请手动复制链接:\n\n' + shareUrl);
+          }
+        }
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          console.error('Share failed:', err);
+          // Fallback to clipboard if share fails for other reasons (like being blocked by Safari due to async delay)
+          if (confirm('分享被拦截或失败。是否尝试直接分享到 WhatsApp？\n(点击取消将复制链接到剪贴板)')) {
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            const waUrl = isMobile 
+              ? `whatsapp://send?text=${encodeURIComponent(shareText)}`
+              : `https://web.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+            window.open(waUrl, '_blank');
+          } else {
+            try {
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(shareText);
+                alert('链接已复制到剪贴板，快去分享给好友吧！');
+              } else {
+                const textArea = document.createElement("textarea");
+                textArea.value = shareText;
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                  document.execCommand('copy');
+                  alert('链接已复制到剪贴板，快去分享给好友吧！');
+                } catch (err) {
+                  alert('复制失败，请手动复制链接:\n\n' + shareUrl);
+                }
+                document.body.removeChild(textArea);
+              }
+            } catch (clipboardErr) {
+              console.error('Clipboard fallback failed:', clipboardErr);
+              alert('复制失败，请手动复制链接:\n\n' + shareUrl);
+            }
           }
         }
       }

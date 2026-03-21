@@ -81,7 +81,7 @@ export const RejoiceModal: React.FC<RejoiceModalProps> = ({ shareId, onClose, on
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden relative"
+          className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden relative max-h-[90vh] flex flex-col"
         >
           {showSparkles && (
             <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-50">
@@ -95,14 +95,14 @@ export const RejoiceModal: React.FC<RejoiceModalProps> = ({ shareId, onClose, on
             </div>
           )}
 
-          <div className="flex justify-between items-center p-6 pb-2">
+          <div className="flex justify-between items-center p-6 pb-2 shrink-0">
             <h3 className="text-xl font-bold font-serif text-zen-ink">随喜赞叹</h3>
             <button onClick={handleClose} className="p-2 text-zen-ink/40 hover:text-zen-ink rounded-full hover:bg-zen-bg transition-colors">
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          <div className="p-6 pt-4">
+          <div className="p-6 pt-4 overflow-y-auto">
             {loading ? (
               <div className="flex flex-col items-center justify-center py-12">
                 <Loader2 className="w-8 h-8 text-zen-accent animate-spin mb-4" />
@@ -159,12 +159,22 @@ export const RejoiceModal: React.FC<RejoiceModalProps> = ({ shareId, onClose, on
                     )}
                   </button>
                   
-                  <button
-                    onClick={handleClose}
-                    className="w-full py-3 text-sm text-zen-ink/60 hover:text-zen-ink transition-colors"
-                  >
-                    我也要修行
-                  </button>
+                  {rejoiced ? (
+                    <button
+                      onClick={handleClose}
+                      className="w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 bg-zen-ink text-white hover:opacity-90 transition-all"
+                    >
+                      开启我的修行之旅
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleClose}
+                      className="w-full py-3 text-sm text-zen-ink/60 hover:text-zen-ink transition-colors"
+                    >
+                      我也要修行
+                    </button>
+                  )}
+                  
                   {data.isCommunity && onViewCommunity && (
                     <button
                       onClick={() => {
