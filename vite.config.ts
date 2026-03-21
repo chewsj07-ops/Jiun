@@ -12,7 +12,7 @@ export default defineConfig(({mode}) => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['icon.svg'],
+        includeAssets: ['icon.svg', 'apple-touch-icon.png'],
         manifest: {
           name: '禅心助手',
           short_name: '禅心助手',
@@ -32,6 +32,12 @@ export default defineConfig(({mode}) => {
               sizes: '512x512',
               type: 'image/svg+xml',
               purpose: 'any maskable'
+            },
+            {
+              src: 'apple-touch-icon.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'apple touch icon'
             }
           ]
         },
