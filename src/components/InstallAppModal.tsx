@@ -29,7 +29,7 @@ export const InstallAppModal: React.FC<InstallAppModalProps> = ({ isOpen, onClos
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
           onClick={(e) => e.stopPropagation()}
-          className="bg-zen-bg w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-zen-accent/20 flex flex-col max-h-[90vh]"
+          className="bg-zen-bg w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-zen-accent/20 flex flex-col max-h-[80vh]"
         >
           <div className="p-6 border-b border-zen-accent/10 flex justify-between items-center bg-zen-accent/5 shrink-0">
             <h2 className="text-xl font-bold text-zen-accent flex items-center gap-2">
