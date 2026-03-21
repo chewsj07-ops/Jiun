@@ -1,7 +1,7 @@
 export const identityService = {
   getUserId(): string {
     let uid = localStorage.getItem('zen_user_id');
-    if (!uid) {
+    if (!uid || (!uid.startsWith('guest_') && !uid.startsWith('email_') && !uid.startsWith('google_'))) {
       const randomStr = window.crypto?.randomUUID ? window.crypto.randomUUID() : Math.random().toString(36).substring(2, 15);
       uid = 'guest_' + randomStr;
       localStorage.setItem('zen_user_id', uid);

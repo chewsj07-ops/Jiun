@@ -541,7 +541,17 @@ export default function App() {
         }
       });
       
-      if (posts.length > 0) {
+      // Always include some mock data so the feed isn't empty for new users
+      const mockPosts: CommunityPost[] = [
+        { id: 'mock1', userName: "悟道者", chant: "南无阿弥陀佛", count: 108, dedication: "愿众生离苦得乐。", likes: 24, timestamp: Date.now() - 7200000, isUserPost: false },
+        { id: 'mock2', userName: "清净心", chant: "心经", count: 21, dedication: "愿以此功德，回向给家人身体健康，平安喜乐。", likes: 15, timestamp: Date.now() - 86400000, isUserPost: false },
+        { id: 'mock3', userName: "无名氏", chant: "大悲咒", count: 7, dedication: "祈愿世界和平，国泰民安。", likes: 42, timestamp: Date.now() - 172800000, isUserPost: false }
+      ];
+      
+      // Filter out mock posts if we have a lot of real posts, otherwise merge them
+      if (posts.length < 10) {
+        setCommunityPosts([...posts, ...mockPosts]);
+      } else {
         setCommunityPosts(posts);
       }
     }, (error) => {
@@ -1162,8 +1172,9 @@ export default function App() {
                               count: newPost.count
                             };
                             await setDoc(doc(db, 'shared_merits', shareId), shareDoc);
-                          } catch (err) {
+                          } catch (err: any) {
                             console.error('Failed to save to community feed:', err);
+                            alert('分享至共修大厅失败，请检查网络或稍后再试。错误信息: ' + err.message);
                           }
                         }
                         
