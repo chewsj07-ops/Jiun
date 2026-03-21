@@ -4,7 +4,7 @@ import { Book, Heart, History, MessageCircle, Settings, Trophy, Sparkles, Loader
 import { GoogleGenAI } from "@google/genai";
 import { useFirebaseSync } from './hooks/useFirebaseSync';
 import { useFirebase } from './contexts/FirebaseContext';
-import { doc, setDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { doc, setDoc, deleteDoc, writeBatch, collection, query, where, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import { db, auth } from './firebase';
 import { handleFirestoreError, OperationType } from './utils/firebaseErrors';
 import { Dashboard } from './components/Dashboard';
@@ -31,7 +31,7 @@ import { identityService } from './services/identityService';
 import { Country, City } from 'country-state-city';
 
 interface CommunityPost {
-  id: number;
+  id: number | string;
   userName: string;
   chant: string;
   count: number;
@@ -513,6 +513,44 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('zen_community_posts', JSON.stringify(communityPosts));
   }, [communityPosts]);
+
+  useEffect(() => {
+    const q = query(
+      collection(db, 'shared_merits'),
+      orderBy('timestamp', 'desc'),
+      limit(100)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const posts: CommunityPost[] = [];
+      const currentUserId = fbUser ? fbUser.uid : identityService.getUserId();
+      
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.isCommunity) {
+          posts.push({
+            id: doc.id,
+            userName: data.userName || '同修',
+            chant: data.chant || data.title?.split(' ')[0] || '修行',
+            count: data.count || parseInt(data.title?.match(/\d+/)?.[0] || '0') || 0,
+            dedication: data.description || '',
+            likes: data.rejoiceCount || 0,
+            timestamp: data.timestamp || Date.now(),
+            isUserPost: data.userId === currentUserId
+          });
+        }
+      });
+      
+      if (posts.length > 0) {
+        setCommunityPosts(posts);
+      }
+    }, (error) => {
+      console.error('Error fetching community posts:', error);
+      // Fallback to local storage if query fails
+    });
+
+    return () => unsubscribe();
+  }, [fbUser]);
 
   const [shareToCommunity, setShareToCommunity] = useState(true);
   const [communityPeriod, setCommunityPeriod] = useState<'daily' | 'monthly' | 'yearly' | 'all'>('all');
@@ -1091,10 +1129,10 @@ export default function App() {
 
                   <div className="flex gap-3">
                     <button 
-                      onClick={() => {
+                      onClick={async () => {
                         if (shareToCommunity) {
                           const newPost: CommunityPost = {
-                            id: Date.now(),
+                            id: Date.now().toString(),
                             userName: userProfile.name || "静心居士",
                             chant: lastSession.chant,
                             count: lastSession.count,
@@ -1103,7 +1141,30 @@ export default function App() {
                             timestamp: Date.now(),
                             isUserPost: true
                           };
+                          
+                          // Save to local state for immediate feedback
                           setCommunityPosts(prev => [newPost, ...prev]);
+                          
+                          // Save to Firestore for real community feed
+                          try {
+                            const currentUserId = fbUser ? fbUser.uid : identityService.getUserId();
+                            const shareId = newPost.id.toString() + Math.random().toString(36).substring(2, 9);
+                            const shareDoc = {
+                              userId: currentUserId,
+                              userName: newPost.userName,
+                              type: '修行',
+                              title: `${newPost.chant} ${newPost.count}次`,
+                              description: newPost.dedication,
+                              rejoiceCount: 0,
+                              timestamp: newPost.timestamp,
+                              isCommunity: true,
+                              chant: newPost.chant,
+                              count: newPost.count
+                            };
+                            await setDoc(doc(db, 'shared_merits', shareId), shareDoc);
+                          } catch (err) {
+                            console.error('Failed to save to community feed:', err);
+                          }
                         }
                         
                         practiceService.updateActivity('full_dedication', true);
@@ -2141,10 +2202,20 @@ export default function App() {
                         <span>分享</span>
                       </button>
                       <button 
-                        onClick={() => {
+                        onClick={async () => {
+                          // Optimistic update
                           setCommunityPosts(prev => prev.map(p => 
                             p.id === post.id ? { ...p, likes: p.likes + 1 } : p
                           ));
+                          
+                          // Update Firestore
+                          try {
+                            const postRef = doc(db, 'shared_merits', post.id.toString());
+                            await setDoc(postRef, { rejoiceCount: post.likes + 1 }, { merge: true });
+                          } catch (err) {
+                            console.error('Failed to update rejoice count in Firestore:', err);
+                          }
+                          
                           practiceService.logRejoice();
                           setRejoiceStats(practiceService.getRejoiceStats());
                           
