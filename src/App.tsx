@@ -277,39 +277,11 @@ export default function App() {
 
       const shareText = `我刚刚完成了 ${meritData.count ? meritData.count + ' 次 ' : ''}${meritData.chant || meritData.type}。愿以此功德，普及于一切。邀请您一同随喜赞叹！\n\n${shareUrl}`;
 
-      const sharePromise = (async () => {
-        try {
-          if (navigator.share) {
-            await navigator.share({
-              title: '随喜赞叹',
-              text: `我刚刚完成了 ${meritData.count ? meritData.count + ' 次 ' : ''}${meritData.chant || meritData.type}。愿以此功德，普及于一切。邀请您一同随喜赞叹！`,
-              url: shareUrl
-            });
-          } else if (navigator.clipboard && navigator.clipboard.writeText) {
-            await navigator.clipboard.writeText(shareText);
-            alert('链接已复制到剪贴板，快去分享给好友吧！');
-          } else {
-            const textArea = document.createElement("textarea");
-            textArea.value = shareText;
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            try {
-              document.execCommand('copy');
-              alert('链接已复制到剪贴板，快去分享给好友吧！');
-            } catch (err) {
-              alert('复制失败，请手动复制链接:\n\n' + shareUrl);
-            }
-            document.body.removeChild(textArea);
-          }
-        } catch (err: any) {
-          if (err.name !== 'AbortError') {
-            console.error('Share failed:', err);
-          }
-        }
-      })();
-
-      const docPromise = (async () => {
+      // 1. Save to Firestore FIRST
+      // This is critical for iOS Safari. If we call navigator.share first, Safari might suspend
+      // the page and the network request for setDoc will be paused until the user returns to Safari.
+      // If the friend clicks the link before the user returns to Safari, the document won't exist.
+      try {
         if (!meritData.id || !meritData.userName) {
           const shareDoc = {
             userId: currentUserId,
@@ -335,10 +307,66 @@ export default function App() {
           };
           await setDoc(doc(db, 'shared_merits', shareId), shareDoc, { merge: true });
         }
-      })();
+      } catch (err: any) {
+        console.error('Failed to save shared merit to Firestore:', err);
+        alert('生成分享链接失败，请检查网络或稍后再试。错误信息: ' + err.message);
+        return; // Stop if we can't save
+      }
 
-      // Execute concurrently
-      await Promise.all([sharePromise, docPromise]);
+      // 2. THEN call navigator.share or clipboard
+      try {
+        if (navigator.share) {
+          await navigator.share({
+            title: '随喜赞叹',
+            text: shareText,
+            url: shareUrl
+          });
+        } else if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(shareText);
+          alert('链接已复制到剪贴板，快去分享给好友吧！');
+        } else {
+          const textArea = document.createElement("textarea");
+          textArea.value = shareText;
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          try {
+            document.execCommand('copy');
+            alert('链接已复制到剪贴板，快去分享给好友吧！');
+          } catch (err) {
+            alert('复制失败，请手动复制链接:\n\n' + shareUrl);
+          }
+          document.body.removeChild(textArea);
+        }
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          console.error('Share failed:', err);
+          // Fallback to clipboard if share fails for other reasons (like being blocked by Safari due to async delay)
+          try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              await navigator.clipboard.writeText(shareText);
+              alert('链接已复制到剪贴板，快去分享给好友吧！');
+            } else {
+              const textArea = document.createElement("textarea");
+              textArea.value = shareText;
+              document.body.appendChild(textArea);
+              textArea.focus();
+              textArea.select();
+              try {
+                document.execCommand('copy');
+                alert('链接已复制到剪贴板，快去分享给好友吧！');
+              } catch (err) {
+                alert('复制失败，请手动复制链接:\n\n' + shareUrl);
+              }
+              document.body.removeChild(textArea);
+            }
+          } catch (clipboardErr) {
+            console.error('Clipboard fallback failed:', clipboardErr);
+            alert('复制失败，请手动复制链接:\n\n' + shareUrl);
+          }
+        }
+      }
+      
     } catch (error) {
       console.error(error);
     } finally {
