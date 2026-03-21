@@ -135,50 +135,41 @@ export const RejoiceModal: React.FC<RejoiceModalProps> = ({ shareId, onClose, on
                 </div>
 
                 <div className="flex flex-col gap-3">
-                  <button
-                    onClick={handleRejoice}
-                    disabled={rejoiced || rejoicing}
-                    className={`w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all ${
-                      rejoiced 
-                        ? 'bg-green-500 text-white' 
-                        : 'bg-zen-accent text-white hover:opacity-90'
-                    }`}
-                  >
-                    {rejoicing ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : rejoiced ? (
-                      <>
-                        <Heart className="w-5 h-5 fill-current" />
-                        已随喜 ({data.rejoiceCount})
-                      </>
-                    ) : (
-                      <>
-                        <Heart className="w-5 h-5" />
-                        随喜赞叹 ({data.rejoiceCount})
-                      </>
-                    )}
-                  </button>
+                  {rejoiced ? (
+                    <button
+                      onClick={() => {
+                        handleClose();
+                        if (onViewCommunity) onViewCommunity();
+                      }}
+                      className="w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all bg-green-500 text-white hover:bg-green-600 shadow-lg shadow-green-500/30"
+                    >
+                      <Heart className="w-5 h-5 fill-current" />
+                      已随喜，前往共修大厅
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleRejoice}
+                      disabled={rejoicing}
+                      className="w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all bg-zen-accent text-white hover:opacity-90"
+                    >
+                      {rejoicing ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <>
+                          <Heart className="w-5 h-5" />
+                          随喜赞叹 ({data.rejoiceCount})
+                        </>
+                      )}
+                    </button>
+                  )}
                   
                   {rejoiced ? (
-                    <>
-                      {onViewCommunity && (
-                        <button
-                          onClick={() => {
-                            handleClose();
-                            onViewCommunity();
-                          }}
-                          className="w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 bg-zen-ink text-white hover:opacity-90 transition-all"
-                        >
-                          前往共修，随喜更多功德
-                        </button>
-                      )}
-                      <button
-                        onClick={handleClose}
-                        className="w-full py-3 text-sm text-zen-ink/60 hover:text-zen-ink transition-colors"
-                      >
-                        开启我的修行之旅
-                      </button>
-                    </>
+                    <button
+                      onClick={handleClose}
+                      className="w-full py-3 text-sm text-zen-ink/60 hover:text-zen-ink transition-colors"
+                    >
+                      开启我的修行之旅
+                    </button>
                   ) : (
                     <>
                       <button
