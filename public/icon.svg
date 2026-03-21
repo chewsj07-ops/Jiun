@@ -1,5 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M12 22c-4.97 0-9-4.03-9-9 0-4.97 4.03-9 9-9s9 4.03 9 9c0 4.97-4.03 9-9 9z"/>
-  <path d="M12 13c-2.76 0-5-2.24-5-5 0-2.76 2.24-5 5-5s5 2.24 5 5c0 2.76-2.24 5-5 5z"/>
-  <path d="M12 13v9"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#F9F6F0" />
+  
+  <!-- Outer Ring (Zen Circle) -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="#8B5E3C" stroke-width="12" opacity="0.8" />
+  <circle cx="256" cy="256" r="165" fill="none" stroke="#8B5E3C" stroke-width="4" opacity="0.4" />
+
+  <!-- Lotus Flower -->
+  <g transform="translate(256, 320) scale(1.5)">
+    <!-- Center Petal -->
+    <path d="M0,-120 C30,-50 40,0 0,20 C-40,0 -30,-50 0,-120 Z" fill="#8B5E3C" />
+    
+    <!-- Inner Petals -->
+    <path d="M0,-100 C40,-60 60,-10 0,20 C10,-10 20,-50 0,-100 Z" fill="#A67B5B" />
+    <path d="M0,-100 C-40,-60 -60,-10 0,20 C-10,-10 -20,-50 0,-100 Z" fill="#A67B5B" />
+    
+    <!-- Outer Petals -->
+    <path d="M0,-70 C60,-40 80,10 0,20 C20,0 40,-30 0,-70 Z" fill="#C19A7A" />
+    <path d="M0,-70 C-60,-40 -80,10 0,20 C-20,0 -40,-30 0,-70 Z" fill="#C19A7A" />
+    
+    <!-- Base Leaves -->
+    <path d="M0,20 C40,30 70,20 90,0 C60,20 30,25 0,20 Z" fill="#8B5E3C" opacity="0.7" />
+    <path d="M0,20 C-40,30 -70,20 -90,0 C-60,20 -30,25 0,20 Z" fill="#8B5E3C" opacity="0.7" />
+  </g>
 </svg>
