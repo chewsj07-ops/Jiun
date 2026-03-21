@@ -201,19 +201,47 @@ export const WoodenFish: React.FC<WoodenFishProps> = ({
         {appearance === 'lotus' && (
           <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="wooden-fish-glow drop-shadow-xl text-zen-accent">
             <defs>
-              <linearGradient id="lotusGradient" x1="100" y1="0" x2="100" y2="200" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="currentColor" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="currentColor" />
+              <linearGradient id="lotusGrad1" x1="100" y1="20" x2="100" y2="180" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="currentColor" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="currentColor" stopOpacity="0.4" />
+              </linearGradient>
+              <linearGradient id="lotusGrad2" x1="100" y1="50" x2="100" y2="180" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="currentColor" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="currentColor" stopOpacity="0.3" />
+              </linearGradient>
+              <linearGradient id="lotusGrad3" x1="100" y1="80" x2="100" y2="180" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="currentColor" stopOpacity="0.7" />
+                <stop offset="100%" stopColor="currentColor" stopOpacity="0.2" />
               </linearGradient>
             </defs>
-            {/* Lotus Petals */}
-            <path d="M100 20 C100 20 140 60 140 100 C140 140 100 180 100 180 C100 180 60 140 60 100 C60 60 100 20 100 20 Z" fill="url(#lotusGradient)" />
-            <path d="M100 180 C100 180 150 150 170 100 C190 50 100 40 100 40" fill="currentColor" fillOpacity="0.6" />
-            <path d="M100 180 C100 180 50 150 30 100 C10 50 100 40 100 40" fill="currentColor" fillOpacity="0.6" />
-            <path d="M60 100 C60 100 20 120 20 150 C20 180 100 190 100 190" fill="currentColor" fillOpacity="0.4" />
-            <path d="M140 100 C140 100 180 120 180 150 C180 180 100 190 100 190" fill="currentColor" fillOpacity="0.4" />
-            {/* Center */}
-            <circle cx="100" cy="100" r="10" fill="#FFD700" fillOpacity="0.8" />
+            
+            <g transform="translate(0, 10)">
+              {/* Back petals */}
+              <path d="M 100 160 C 70 130, 50 80, 60 40 C 75 70, 85 110, 100 160 Z" fill="url(#lotusGrad3)" />
+              <path d="M 100 160 C 130 130, 150 80, 140 40 C 125 70, 115 110, 100 160 Z" fill="url(#lotusGrad3)" />
+              
+              {/* Outer side petals */}
+              <path d="M 100 160 C 50 150, 10 110, 15 70 C 35 100, 65 130, 100 160 Z" fill="url(#lotusGrad3)" />
+              <path d="M 100 160 C 150 150, 190 110, 185 70 C 165 100, 135 130, 100 160 Z" fill="url(#lotusGrad3)" />
+              
+              {/* Inner side petals */}
+              <path d="M 100 160 C 60 140, 30 90, 35 50 C 55 85, 75 120, 100 160 Z" fill="url(#lotusGrad2)" />
+              <path d="M 100 160 C 140 140, 170 90, 165 50 C 145 85, 125 120, 100 160 Z" fill="url(#lotusGrad2)" />
+              
+              {/* Front side petals */}
+              <path d="M 100 160 C 70 150, 40 110, 45 70 C 65 105, 80 135, 100 160 Z" fill="url(#lotusGrad1)" />
+              <path d="M 100 160 C 130 150, 160 110, 155 70 C 135 105, 120 135, 100 160 Z" fill="url(#lotusGrad1)" />
+              
+              {/* Center petal */}
+              <path d="M 100 160 C 80 110, 85 50, 100 20 C 115 50, 120 110, 100 160 Z" fill="url(#lotusGrad1)" />
+              
+              {/* Bottom horizontal petals */}
+              <path d="M 100 160 C 70 170, 30 165, 20 145 C 45 155, 75 160, 100 160 Z" fill="url(#lotusGrad3)" />
+              <path d="M 100 160 C 130 170, 170 165, 180 145 C 155 155, 125 160, 100 160 Z" fill="url(#lotusGrad3)" />
+              
+              {/* Base */}
+              <path d="M 85 160 C 95 165, 105 165, 115 160 C 105 168, 95 168, 85 160 Z" fill="currentColor" fillOpacity="0.8" />
+            </g>
           </svg>
         )}
 

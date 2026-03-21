@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Book, Heart, History, MessageCircle, Settings, Trophy, Sparkles, Loader2, Music, Play, Pause, Volume2, Wind, Plus, Trash2, Check, ChevronDown, Users, ThumbsUp, Globe, Leaf, Brain, Target, Share2, X, LogOut, Menu, Home, BookOpen, Moon, Clock, Sun } from 'lucide-react';
+import { Book, Heart, History, MessageCircle, Settings, Trophy, Sparkles, Loader2, Music, Play, Pause, Volume2, Wind, Plus, Trash2, Check, ChevronDown, Users, ThumbsUp, Globe, Leaf, Brain, Target, Share2, X, LogOut, Menu, Home, BookOpen, Moon, Clock, Sun, Download } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import { useFirebaseSync } from './hooks/useFirebaseSync';
 import { useFirebase } from './contexts/FirebaseContext';
@@ -24,6 +24,7 @@ import { GoodDeedCollector } from './components/GoodDeedCollector';
 import { AuthModal } from './components/AuthModal';
 import { ChangePasswordModal } from './components/ChangePasswordModal';
 import { ExportModal } from './components/ExportModal';
+import { InstallAppModal } from './components/InstallAppModal';
 import { LegalModals } from './components/LegalModals';
 import { RejoiceModal } from './components/RejoiceModal';
 import { reportService } from './services/reportService';
@@ -193,11 +194,11 @@ export default function App() {
   // Removed internal language state as it is now managed by useTranslation hook
 
   const [woodenFishAppearance, setWoodenFishAppearance] = useState<'fish' | 'lotus' | 'bowl'>(() => {
-    return (localStorage.getItem('zen_fish_appearance') as any) || 'fish';
+    return (localStorage.getItem('zen_fish_appearance') as any) || 'lotus';
   });
 
   const [meditationWoodenFishAppearance, setMeditationWoodenFishAppearance] = useState<'fish' | 'lotus' | 'bowl'>(() => {
-    return (localStorage.getItem('zen_meditation_fish_appearance') as any) || 'fish';
+    return (localStorage.getItem('zen_meditation_fish_appearance') as any) || 'lotus';
   });
 
   const [dedications, setDedications] = useState<{id: string, content: string, isDefault: boolean}[]>(() => {
@@ -786,6 +787,7 @@ export default function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showInstallModal, setShowInstallModal] = useState(false);
   const [isGuest, setIsGuest] = useState(!fbUser && identityService.isGuest());
   const [userId, setUserId] = useState(fbUser ? fbUser.uid : identityService.getUserId());
 
@@ -1491,6 +1493,17 @@ export default function App() {
               </div>
               
               <div className="p-6 border-t border-zen-accent/10 space-y-4 shrink-0">
+                <button
+                  onClick={() => {
+                    setShowInstallModal(true);
+                    setIsSideMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 text-zen-ink/70 hover:text-zen-accent transition-colors"
+                >
+                  <Download className="w-5 h-5 shrink-0" />
+                  <span className="font-medium truncate">下载APP到手机</span>
+                </button>
+                
                 <button
                   onClick={() => {
                     setShowExportModal(true);
@@ -3314,6 +3327,7 @@ export default function App() {
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
       <ChangePasswordModal isOpen={showChangePasswordModal} onClose={() => setShowChangePasswordModal(false)} />
       <ExportModal isOpen={showExportModal} onClose={() => setShowExportModal(false)} />
+      <InstallAppModal isOpen={showInstallModal} onClose={() => setShowInstallModal(false)} />
       <LegalModals />
       {rejoiceId && (
         <RejoiceModal 
